@@ -76,23 +76,19 @@ def no_difference(S):
     return out
 
 
-TIERS = [('重點(3項以上)', 3), ('重點+一般(2項以上)', 2), ('三級都做(1項以上)', 1)]
-
-
 def _effect(d):
-    m = smf.logit(f'{PERP_BASE} + risk5', data=d).fit(disp=0)
+    m = smf.logit(f'{PERP_BASE} + ' + ' + '.join(RISK5), data=d).fit(disp=0)      # 五項風險分開放入同一個模型
     base = m.predict(d).mean(); out = {'基準停手率': base * 100}
-    for lab, thr in TIERS:                                                   # 輔導該級以上的加害者,每人少一項風險
-        a = d.copy(); a['risk5'] = np.where(a.risk5 >= thr, a.risk5 - 1, a.risk5)
-        share = (d.risk5 >= thr).mean(); gain = (m.predict(a).mean() - base) * 100
-        out.update({lab + '_占比%': share * 100, lab + '_每100位加害者多停手': gain, lab + '_每100位被輔導者多停手': gain / share})
+    for v in RISK5:                                                              # 只把「有此風險」的人改成沒有,其他條件不變
+        a = d.copy(); a[v] = 0; share = (d[v] == 1).mean(); gain = (m.predict(a).mean() - base) * 100
+        out.update({v + '_占比%': share * 100, v + '_每100位加害者多停手': gain, v + '_每100位有此風險者多停手': gain / share})
     return out
 
 
 def expected_effect(S, n_boot=1000, seed=2026):
-    """4 預期成效(分級輔導的情境推算):依累積風險項數分三級輔導,若被輔導者各少一項風險,停手比例預期增加多少。
-    用 3.3 的累積風險模型預測;信賴區間以班級為單位重抽(群聚拔靴法)。假設風險能被減少,不是因果保證"""
-    x = S.dropna(subset=RISK5 + ['female', 'perp_sev', 'cls_perp_rate', 'stop', 'risk5', 'cls']).copy()
+    """4 預期成效(情境推算):處理掉某一項風險後,停手比例預期增加多少。
+    五項風險分開放入邏輯斯迴歸;信賴區間以班級為單位重抽(群聚拔靴法)。假設風險能被減少,不是因果保證"""
+    x = S.dropna(subset=RISK5 + ['female', 'perp_sev', 'cls_perp_rate', 'stop', 'cls']).copy()
     est = _effect(x)
     rng = np.random.default_rng(seed); groups = {c: g for c, g in x.groupby('cls')}; cls = list(groups)
     B = pd.DataFrame([_effect(pd.concat([groups[c] for c in rng.choice(cls, len(cls))], ignore_index=True)) for _ in range(n_boot)])
