@@ -33,6 +33,11 @@ def _style(ax, grid='x'):
     ax.set_axisbelow(True)
 
 
+def fw(s):
+    """標籤中緊鄰中文的半形標點改全形"""
+    return s.replace(':', '：').replace('(', '（').replace(')', '）').replace(',', '，')
+
+
 def dotplot(name, title, sub, res, color, xlim, h=None):
     """「有 vs 沒有」點圖。res: {標籤: compare() 的結果}"""
     h = h or 0.5 * len(res) + 1.6
@@ -47,25 +52,25 @@ def dotplot(name, title, sub, res, color, xlim, h=None):
         ax.scatter(r['沒有'], i, s=60, facecolor=SURF, edgecolor=c, lw=1.8, zorder=2)
         ax.scatter(r['有'], i, s=60, color=c, zorder=3)
         ax.text(xlim[1] + 1, i, f"{r['有']:.0f}% vs {r['沒有']:.0f}%{'*' if r['p'] < .05 else ''}", va='center', fontsize=9, color=INK2)
-    ax.set_yticks(range(len(items))); ax.set_yticklabels([nm for nm, _ in items], fontsize=9.8, color=INK2)
+    ax.set_yticks(range(len(items))); ax.set_yticklabels([fw(nm) for nm, _ in items], fontsize=9.8, color=INK2)
     ax.set_xlim(*xlim); ax.xaxis.set_major_formatter(pct)
     return _save(f, name)
 
 
 def fig1_victim(vc):
-    return dotplot('fig1_victim.png', '受害者怎麼做,一年後脫離的比例都差不多',
-                   f"2023 年受害者(n={vc['n_受害者']:,})2024 年不再受害的比例。● 有這樣做 ○ 沒有;* p<0.05(控制性別、受害嚴重度、是否也加害)",
+    return dotplot('fig1_victim.png', '受害者怎麼做，結果都差不多',
+                   f"一年後不再受害的比例（n={vc['n_受害者']:,}）。● 有這樣做 ○ 沒有；＊p<0.05（控制性別、嚴重度、是否也加害）",
                    vc['因應'], lambda r: RED if r['p'] < .05 else GREY, xlim=(35, 75), h=3.9)
 
 
 def fig2_flow(fl):
     """2023 加害者一年後的去向(流向圖 / Sankey)"""
     cnt = fl['人數']
-    outs = [('無涉入', '完全停手'), ('純受害', '停手,但被欺負'), ('純加害', '繼續霸凌別人'), ('加害受害', '繼續霸凌,也被欺負')]
+    outs = [('無涉入', '完全停手'), ('純受害', '停手，但被欺負'), ('純加害', '繼續霸凌別人'), ('加害受害', '繼續霸凌，也被欺負')]
     srcs = [('純加害', '2023 純加害'), ('加害受害', '2023 加害受害')]
     f = plt.figure(figsize=(9.4, 3.3), dpi=200, facecolor=SURF)
-    f.text(0.02, 0.97, '加害受害者最難停手:三分之一一年後仍在霸凌、也被欺負', fontsize=14, fontweight='bold', color=INK, va='top')
-    f.text(0.02, 0.89, '2023 年霸凌他人的學生,2024 年的去向;帶子寬度代表人數', fontsize=9.5, color=MUTED, va='top')
+    f.text(0.02, 0.97, '加害受害者最難停手', fontsize=14, fontweight='bold', color=INK, va='top')
+    f.text(0.02, 0.89, '2023 年霸凌他人的學生，2024 年的去向；帶子寬度代表人數', fontsize=9.5, color=MUTED, va='top')
     ax = f.add_axes([0.02, 0.02, 0.96, 0.82]); ax.set_xlim(0, 10); ax.set_ylim(0, 1); ax.axis('off')
     N = sum(sum(r.values()) for r in cnt.values()); gap = 0.035; scale = (1 - gap * 3) / N
     xl, xr, w = 2.3, 7.1, 0.25
@@ -99,12 +104,12 @@ def fig2_flow(fl):
 def fig3_cumulative(cu):
     """左:累積風險項數;右:累積保護因子項數"""
     f = plt.figure(figsize=(9.4, 4.1), dpi=200, facecolor=SURF)
-    f.text(0.02, 0.97, '風險會疊加:每多一項,加害者停手的機會就少一截', fontsize=14, fontweight='bold', color=INK, va='top')
-    f.text(0.02, 0.89, '2023 年加害者 2024 年停止霸凌他人的比例(%),依 2023 年擁有的風險 / 保護因子項數', fontsize=9.5, color=MUTED, va='top')
+    f.text(0.02, 0.97, '風險疊加，保護也疊加', fontsize=14, fontweight='bold', color=INK, va='top')
+    f.text(0.02, 0.89, '2024 年停手的比例（%），依 2023 年的風險／保護因子項數', fontsize=9.5, color=MUTED, va='top')
     panels = [([0.07, 0.13, 0.52, 0.6], cu['risk5'], RED, ['0', '1', '2', '3', '4+'], '風險項數',
-               f"風險:家裡會打、常被批評、同時被欺負、網路成癮偏高、好友會惹事(n={cu['risk5']['N']:,})", 1.8),
+               f"風險：家裡會打、常被批評、同時被欺負、網路成癮偏高、好友會惹事（n={cu['risk5']['N']:,}）", 1.8),
               ([0.68, 0.13, 0.29, 0.6], cu['prot3'], BLUE, ['0', '1', '2', '3'], '保護因子項數',
-               f"保護:喜歡學校、班級凝聚力高、導師自評師生親近(n={cu['prot3']['N']:,})", 2)]
+               f"保護：喜歡學校、班級凝聚力高、導師自評師生親近（n={cu['prot3']['N']:,}）", 2)]
     for box, d, col, ticks, xlabel, title, dy in panels:
         ax = f.add_axes(box); _style(ax, grid='y'); ax.yaxis.set_major_formatter(pct); ax.set_ylim(30, 90)
         ax.plot(d['k'], d['rate'], color=col, lw=2, marker='o', ms=7, mec=SURF, mew=1.5)
@@ -117,6 +122,6 @@ def fig3_cumulative(cu):
 
 def fig4_nohelp(nd):
     rows = {k: v for k, v in nd.items() if k.startswith(('父母', '家境', '導師'))}
-    return dotplot('fig4_nohelp.png', '以為有用,其實看不出差別',
-                   '2023 年加害者 2024 年停止霸凌他人的比例。● 有該情形 ○ 沒有(控制性別、加害嚴重度、是否同時受害、班級加害率)',
+    return dotplot('fig4_nohelp.png', '以為有用，其實看不出差別',
+                   '2024 年停手的比例。● 有該情形 ○ 沒有（控制性別、嚴重度、是否同時受害、班級加害率）',
                    rows, lambda r: GREY, xlim=(40, 85))
