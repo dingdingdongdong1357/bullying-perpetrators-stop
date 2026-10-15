@@ -29,7 +29,9 @@
 ├─ data/                 放 TIGPS 原始資料(不公開,見 data/README.md)
 ├─ results/              report_numbers.json:報告所有數字(僅彙總值)
 ├─ figures/              fig1–fig4
-└─ report/               報告 PDF
+├─ report/               報告 PDF
+├─ slides/               簡報 PDF(25 頁)
+└─ docs/                 互動頁(GitHub Pages)
 ```
 
 ## 如何執行
