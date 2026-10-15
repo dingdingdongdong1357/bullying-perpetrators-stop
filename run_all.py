@@ -18,7 +18,8 @@ def main():
          '3.3 個別因素': A.individual_factors(S),
          '3.3 會打比例(依角色)': A.hit_by_role(D),
          '3.3 累積指數': A.cumulative(S),
-         '3.4 看不出差別': A.no_difference(S)}
+         '3.4 看不出差別': A.no_difference(S),
+         '4 預期成效': A.expected_effect(S)}
     RESULTS_DIR.mkdir(exist_ok=True)
     (RESULTS_DIR / 'report_numbers.json').write_text(json.dumps(R, ensure_ascii=False, indent=1), encoding='utf-8')
     for fig in [F.fig1_victim(R['3.1 受害者因應']), F.fig2_flow(R['3.2 加害者去向']),

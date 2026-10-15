@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """報告第 3 節的各項分析。每個函式回傳一個 dict,由 run_all.py 彙整成 results/report_numbers.json"""
+import numpy as np
+import pandas as pd
+import statsmodels.formula.api as smf
+
 from .data import COPE, ROLES, RISK5
 from .models import logit, odds_ratio, compare, ladder
 
@@ -70,3 +74,22 @@ def no_difference(S):
     out['n_有導師資料'] = int(S.notify.notna().sum())
     out['肢體或財物霸凌'] = compare(S, 'physical', 'stop', PERP_BASE_V)
     return out
+
+
+def _effect(d):
+    m = smf.logit(f'{PERP_BASE} + risk5', data=d).fit(disp=0)
+    base = m.predict(d).mean()
+    a = d.copy(); a['risk5'] = (a.risk5 - 1).clip(lower=0)                              # 情境一:每位有風險的加害者少一項
+    b = d.copy(); b['risk5'] = np.where(b.risk5 >= 3, b.risk5 - 1, b.risk5)             # 情境二:只優先輔導風險 3 項以上者,各少一項
+    return {'基準停手率': base * 100, '人人少一項': (m.predict(a).mean() - base) * 100,
+            '高風險(3項以上)少一項': (m.predict(b).mean() - base) * 100, '高風險者占比': (d.risk5 >= 3).mean() * 100}
+
+
+def expected_effect(S, n_boot=1000, seed=2026):
+    """4 預期成效(情境推算):若輔導讓加害者的風險少一項,停手比例預期增加多少個百分點。
+    用 3.3 的累積風險模型預測;信賴區間以班級為單位重抽(群聚拔靴法)。假設風險能被減少,不是因果保證"""
+    x = S.dropna(subset=RISK5 + ['female', 'perp_sev', 'cls_perp_rate', 'stop', 'risk5', 'cls']).copy()
+    est = _effect(x)
+    rng = np.random.default_rng(seed); groups = {c: g for c, g in x.groupby('cls')}; cls = list(groups)
+    B = pd.DataFrame([_effect(pd.concat([groups[c] for c in rng.choice(cls, len(cls))], ignore_index=True)) for _ in range(n_boot)])
+    return {'n': len(x), **{k: [round(float(v), 1), round(float(B[k].quantile(.025)), 1), round(float(B[k].quantile(.975)), 1)] for k, v in est.items()}}
