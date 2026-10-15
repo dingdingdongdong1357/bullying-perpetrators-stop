@@ -1,0 +1,487 @@
+<title>誰讓霸凌停下來</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* 版面:一張班級座位表,往下變成老師的聯絡簿頁面;紅筆只用在「答案」與最關鍵的數字 */
+:root {
+  --bg: #e9eef0;          /* 教室牆面的冷灰 */
+  --sheet: #fafbfb;       /* 紙 */
+  --ink: #1c2830;
+  --muted: #5d6b74;
+  --rule: #cfd8dc;
+  --board: #2f4a43;       /* 黑板 */
+  --board-ink: #e8efe9;
+  --pen: #c3362b;         /* 紅筆 */
+  --pen-soft: #f4dcd8;
+  --r-none: #9cb9ad;      /* 無涉入 */
+  --r-victim: #4d84c4;    /* 純受害 */
+  --r-perp: #d6962a;      /* 純加害 */
+  --r-both: #c3362b;      /* 加害受害 */
+  --good: #2f7d5b;
+  --desk: #dfe5e8;
+  --f-display: "LXGW WenKai TC", "Kaiti TC", "DFKai-SB", "BiauKai", serif;
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step-0: 1rem; --step-1: 1.2rem; --step-2: 1.55rem; --step-3: 2.1rem; --step-4: clamp(2.2rem, 6vw, 3.6rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171a; --sheet: #182126; --ink: #e2e9ec; --muted: #95a3ab; --rule: #2d3a41;
+    --board: #1f332d; --board-ink: #d7e4dc; --pen: #ee6a5d; --pen-soft: #3f2422;
+    --r-none: #6f9486; --r-victim: #6ea3e0; --r-perp: #e6ab4a; --r-both: #ee6a5d; --good: #58b88c; --desk: #253137;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171a; --sheet: #182126; --ink: #e2e9ec; --muted: #95a3ab; --rule: #2d3a41;
+  --board: #1f332d; --board-ink: #d7e4dc; --pen: #ee6a5d; --pen-soft: #3f2422;
+  --r-none: #6f9486; --r-victim: #6ea3e0; --r-perp: #e6ab4a; --r-both: #ee6a5d; --good: #58b88c; --desk: #253137;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: var(--step-0); line-height: 1.75; }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 32px 64px; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; line-height: 1.3; text-wrap: balance; margin: 0; }
+h1 { font-size: var(--step-4); letter-spacing: .02em; }
+h2 { font-size: var(--step-3); }
+h3 { font-size: var(--step-1); }
+p { margin: 0; max-width: 62ch; }
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: .8rem; letter-spacing: .12em; color: var(--muted); font-weight: 500; }
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: clamp(20px, 4vw, 40px); display: grid; gap: 18px; min-width: 0; }
+.qtag { font-family: var(--f-display); color: var(--pen); font-size: var(--step-1); }
+.lead { font-size: 1.08rem; color: var(--ink); }
+.muted { color: var(--muted); font-size: .92rem; }
+.pen { color: var(--pen); }
+.pen-underline { background: linear-gradient(transparent 62%, var(--pen-soft) 62%); padding-inline: .1em; }
+
+/* ---- 開場:座位表 ---- */
+.hero { display: grid; gap: 22px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 32px; align-items: start; }
+@media (max-width: 760px) { .hero-grid { grid-template-columns: 1fr; } }
+.hero-text { display: grid; gap: 16px; min-width: 0; }
+.classroom { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.board { background: var(--board); color: var(--board-ink); font-family: var(--f-display); text-align: center; border-radius: 4px; padding: 8px 12px; font-size: 1.05rem; }
+.seats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.seat { aspect-ratio: 1.25; border-radius: 4px; background: var(--desk); position: relative; transition: background .5s ease, transform .5s ease; display: grid; place-items: center; font-family: var(--f-num); font-size: .72rem; color: var(--sheet); max-width: 100%; }
+.seat[data-r="無涉入"] { background: var(--r-none); }
+.seat[data-r="純受害"] { background: var(--r-victim); }
+.seat[data-r="純加害"] { background: var(--r-perp); }
+.seat[data-r="加害受害"] { background: var(--r-both); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .88rem; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* ---- 按鈕 ---- */
+button { font: inherit; cursor: pointer; }
+.btn { border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); padding: 8px 14px; border-radius: 999px; font-size: .92rem; transition: border-color .2s, background .2s; }
+.btn:hover { border-color: var(--ink); }
+.btn:focus-visible, .chip:focus-visible, .opt:focus-visible, .seg button:focus-visible { outline: 2px solid var(--pen); outline-offset: 2px; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.opt { text-align: left; border: 1.5px solid var(--rule); background: var(--sheet); color: var(--ink); padding: 12px 14px; border-radius: 6px; font-size: .95rem; line-height: 1.5; }
+.opt:hover { border-color: var(--ink); }
+.opt[aria-pressed="true"] { border-color: var(--pen); background: var(--pen-soft); }
+.opt[disabled] { cursor: default; }
+.opt[disabled]:not([aria-pressed="true"]) { opacity: .55; }
+.answer { border-left: 3px solid var(--pen); padding: 4px 0 4px 16px; display: grid; gap: 10px; }
+.answer h3 { color: var(--pen); }
+
+/* ---- 點圖 ---- */
+.chart { overflow-x: auto; min-width: 0; }
+.chart svg { display: block; width: 100%; height: auto; min-width: 520px; }
+.chart text { fill: var(--muted); font-family: var(--f-body); font-size: 12px; }
+.chart .lab { fill: var(--ink); font-size: 13px; }
+.chart .val { fill: var(--ink); font-family: var(--f-num); font-size: 12px; }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .link { stroke: var(--rule); stroke-width: 3; }
+.chart .dot-yes { fill: var(--pen); }
+.chart .dot-no { fill: var(--sheet); stroke: var(--pen); stroke-width: 2; }
+.chart.grey .dot-yes { fill: var(--muted); }
+.chart.grey .dot-no { stroke: var(--muted); }
+.chart .hit { fill: transparent; }
+.chart .hit:hover + g .dot-yes, .chart g.rowg:hover .dot-yes { r: 8; }
+
+/* ---- 一年後:100 格 ---- */
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; padding: 3px; gap: 3px; background: var(--bg); flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 6px 14px; border-radius: 999px; font-size: .92rem; }
+.seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.fate { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 28px; align-items: center; }
+@media (max-width: 680px) { .fate { grid-template-columns: 1fr; } }
+.waffle { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-width: 300px; width: 100%; }
+.cell { aspect-ratio: 1; border-radius: 3px; background: var(--desk); transition: background .45s ease; }
+.fate-list { display: grid; gap: 10px; min-width: 0; }
+.fate-item { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; border-bottom: 1px dashed var(--rule); padding-bottom: 8px; }
+.fate-item .sw { transform: translateY(2px); }
+.fate-item .num { font-size: 1.25rem; }
+.fate-item.key .num { color: var(--pen); font-weight: 600; }
+
+/* ---- 風險開關 ---- */
+.meter-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 720px) { .meter-wrap { grid-template-columns: 1fr; } }
+.chips { display: grid; gap: 8px; }
+.chip { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; border: 1.5px solid var(--rule); background: var(--sheet); color: var(--ink); padding: 10px 12px; border-radius: 6px; font-size: .95rem; line-height: 1.4; }
+.chip .box { width: 22px; height: 22px; border-radius: 4px; border: 1.5px solid var(--muted); display: grid; place-items: center; font-family: var(--f-display); color: var(--sheet); font-size: .95rem; }
+.chip[aria-pressed="true"] { border-color: var(--pen); }
+.chip[aria-pressed="true"] .box { background: var(--pen); border-color: var(--pen); }
+.chip.prot[aria-pressed="true"] { border-color: var(--good); }
+.chip.prot[aria-pressed="true"] .box { background: var(--good); border-color: var(--good); }
+.chip small { color: var(--muted); font-size: .78rem; display: block; }
+.chip .tail { font-family: var(--f-num); font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.readout { display: grid; gap: 6px; }
+.big { font-family: var(--f-num); font-size: clamp(3rem, 10vw, 4.6rem); line-height: 1; font-weight: 600; transition: color .3s; }
+.big.low { color: var(--pen); }
+.big.high { color: var(--good); }
+.bar { height: 12px; border-radius: 999px; background: var(--desk); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 999px; background: var(--ink); transition: width .5s ease; }
+.ladder svg { display: block; width: 100%; height: auto; }
+.ladder text { fill: var(--muted); font-family: var(--f-num); font-size: 11px; }
+.ladder .l-grid { stroke: var(--rule); }
+.ladder .l-line { fill: none; stroke: var(--muted); stroke-width: 2; }
+.ladder .l-dot { fill: var(--sheet); stroke: var(--muted); stroke-width: 2; }
+.ladder .l-dot.on { fill: var(--pen); stroke: var(--pen); }
+.ladder.prot .l-dot.on { fill: var(--good); stroke: var(--good); }
+.ladder .l-val { fill: var(--ink); }
+
+/* ---- 建議 ---- */
+.recs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.rec { border-top: 2px solid var(--ink); padding-top: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.rec .law { font-size: .82rem; color: var(--muted); }
+.rec blockquote { margin: 0; font-family: var(--f-display); font-size: 1.02rem; line-height: 1.7; border-left: 2px solid var(--pen); padding-left: 12px; }
+footer { display: grid; gap: 10px; color: var(--muted); font-size: .86rem; }
+footer p { max-width: 80ch; }
+.help { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; color: var(--ink); font-size: .95rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <!-- ===== 開場 ===== -->
+  <header class="hero">
+    <div class="hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow">臺灣數位世代青少年追蹤研究 TIGPS · 2023 國一 → 2024 國二</div>
+        <h1>讓霸凌停下來的,<br>不是受害者</h1>
+        <p class="lead">我們追蹤同一批國中生一年,想知道兩件事:被欺負的孩子做了什麼,能不能讓霸凌停止?霸凌別人的孩子,為什麼有人停手、有人停不了?</p>
+        <p class="muted">右邊是依 8,906 位國一學生的回答,換算成一個 30 人的班級。問題是「上七年級以來,是否曾在實際生活中被霸凌 / 霸凌他人」。</p>
+      </div>
+      <figure class="classroom" aria-label="30 人班級座位表">
+        <div class="board">一年一班 · 30 人</div>
+        <div class="seats" id="seats"></div>
+        <div class="legend" id="legend"></div>
+        <div class="row"><button class="btn" id="shuffle" type="button">換一個座位表</button><span class="muted">每個班都不一樣,但比例大致如此</span></div>
+      </figure>
+    </div>
+  </header>
+
+  <!-- ===== 1 受害者 ===== -->
+  <section class="sheet" aria-labelledby="q1">
+    <div class="qtag">第一題</div>
+    <h2 id="q1">被欺負的孩子告訴老師,一年後比較能擺脫霸凌嗎?</h2>
+    <p class="muted">2023 年有 2,111 位受害者。先猜猜看,和沒告訴老師的孩子相比:</p>
+    <div class="opts" id="q1opts">
+      <button class="opt" type="button" data-v="a">高很多<br><span class="muted">多 15 個百分點以上</span></button>
+      <button class="opt" type="button" data-v="b">高一些<br><span class="muted">多 5 到 15 個百分點</span></button>
+      <button class="opt" type="button" data-v="c">差不多<br><span class="muted">相差 5 個百分點以內</span></button>
+      <button class="opt" type="button" data-v="d">反而比較低</button>
+    </div>
+    <div class="answer" id="q1ans" hidden>
+      <h3 id="q1verdict"></h3>
+      <p>告訴老師的受害者,一年後 <b class="num">53%</b> 不再被欺負;沒告訴老師的是 <b class="num">54%</b>。不只告訴老師,<span class="pen-underline">七種因應方式都沒有明顯差異</span>:控制受害嚴重度後,沒有一種的差距達到統計顯著。未偵測到差異不等於一定沒有效果(例如告訴老師,勝算比 1.00,95% 信賴區間 0.81–1.23)。</p>
+      <div class="chart" id="copeChart" role="img" aria-label="受害者七種因應方式與一年後脫離受害比例"></div>
+      <p class="muted">● 有這樣做 ○ 沒有這樣做。有回答因應題的受害者 n=1,979。回擊者脫離率較低(49% 對 55%),是因為回擊者原本被欺負得較嚴重,控制嚴重度後就沒有差別(p=0.27)。</p>
+    </div>
+    <div class="row" id="q1skip"><button class="btn" type="button" id="q1show">直接看答案</button></div>
+  </section>
+
+  <!-- ===== 2 一年後 ===== -->
+  <section class="sheet" aria-labelledby="q2">
+    <div class="qtag">第二題</div>
+    <h2 id="q2">霸凌別人的孩子,一年後去哪了?</h2>
+    <p>既然沒有偵測到受害者的因應能改變結果,霸凌要結束,更可能取決於加害者是否停手。2023 年的 1,182 位加害者,一年後約六成停手。但有一群人特別難停:<span class="pen-underline">自己也同時被欺負的「加害受害者」</span>。</p>
+    <div class="seg" role="group" aria-label="選擇 2023 年的角色">
+      <button type="button" data-g="加害受害" aria-pressed="true">2023 加害受害者(825 人)</button>
+      <button type="button" data-g="純加害" aria-pressed="false">2023 純加害者(345 人)</button>
+    </div>
+    <div class="fate">
+      <div class="waffle" id="waffle" role="img" aria-label="每 100 人一年後的去向"></div>
+      <div class="fate-list" id="fateList"></div>
+    </div>
+    <p class="muted">每一格代表 100 人中的 1 人。2024 年的角色依同樣的兩個問題判定。</p>
+  </section>
+
+  <!-- ===== 3 風險 ===== -->
+  <section class="sheet" aria-labelledby="q3">
+    <div class="qtag">第三題</div>
+    <h2 id="q3">風險會疊加:勾勾看,停手的機會剩多少</h2>
+    <p>單看一項,家裡會打、常被批評、同時被欺負、網路成癮、好友會惹事,都和較難停手有關。但它們常常同時出現在同一個孩子身上。勾選一個加害者在 2023 年有的狀況,看看一年後停手的比例。</p>
+    <div class="meter-wrap">
+      <div class="chips" id="riskChips" role="group" aria-label="風險因子"></div>
+      <div class="readout">
+        <div class="muted" id="riskCaption"></div>
+        <div class="big" id="riskBig">—</div>
+        <div class="bar"><i id="riskBar"></i></div>
+        <div class="muted" id="riskN"></div>
+        <div class="ladder" id="riskLadder"></div>
+      </div>
+    </div>
+    <p class="muted">依風險「項數」分組的實際停手率(n=558,5 項都有資料的加害者);每多一項,停手的勝算降為 0.66 倍(p&lt;0.001)。圖中的數字是同項數者的平均,不代表特定組合。</p>
+    <hr style="border:0;border-top:1px dashed var(--rule);margin:6px 0;width:100%">
+    <h3>反過來,保護也會累積</h3>
+    <div class="meter-wrap">
+      <div class="chips" id="protChips" role="group" aria-label="保護因子"></div>
+      <div class="readout">
+        <div class="muted" id="protCaption"></div>
+        <div class="big" id="protBig">—</div>
+        <div class="bar"><i id="protBar"></i></div>
+        <div class="muted" id="protN"></div>
+        <div class="ladder prot" id="protLadder"></div>
+      </div>
+    </div>
+    <p class="muted">三項都在 2023 年測量,早於停手(n=812);每多一項,停手的勝算為 1.24 倍(p=0.012)。導師親近為導師自評、全班共用的分數。</p>
+  </section>
+
+  <!-- ===== 4 導師 ===== -->
+  <section class="sheet" aria-labelledby="q4">
+    <div class="qtag">第四題</div>
+    <h2 id="q4">如果你是導師,哪一種處理最能讓加害者停手?</h2>
+    <p class="muted">這些是導師問卷中,處理班上負面事件的方式。選一個你覺得最有效的:</p>
+    <div class="opts" id="q4opts">
+      <button class="opt" type="button" data-v="notify">通知父母</button>
+      <button class="opt" type="button" data-v="counsel">請輔導老師協助</button>
+      <button class="opt" type="button" data-v="punish">處罰學生</button>
+      <button class="opt" type="button" data-v="meeting">召開學生家長會議</button>
+      <button class="opt" type="button" data-v="separate">隔開雙方</button>
+    </div>
+    <div class="answer" id="q4ans" hidden>
+      <h3 id="q4verdict"></h3>
+      <p>有這樣做的導師班上,加害者一年後停手的比例,和沒這樣做的班級<span class="pen-underline">都未偵測到差別</span>。家庭結構也一樣:父母離婚的加害者停手 61%,沒離婚的也是 61%。</p>
+      <div class="chart grey" id="nohelpChart" role="img" aria-label="導師處理方式與家庭結構,加害者一年後停手比例"></div>
+      <p class="muted">● 有該情形 ○ 沒有。有導師資料的加害者 n=827;控制性別、加害嚴重度、是否同時受害與班級加害率,標準誤依班級校正。這是觀察資料:也可能是較難處理的班級,導師用得比較多。「未偵測到差別」不等於沒有效果,信賴區間偏寬(例如輔導老師協助,勝算比 0.76,95% 信賴區間 0.54–1.05)。</p>
+    </div>
+    <div class="row" id="q4skip"><button class="btn" type="button" id="q4show">直接看答案</button></div>
+  </section>
+
+  <!-- ===== 5 建議 ===== -->
+  <section class="sheet" aria-labelledby="q5">
+    <div class="eyebrow">所以該怎麼做</div>
+    <h2 id="q5">把輔導的重心,移到加害者和他的家</h2>
+    <p>關鍵在加害者在家裡如何被對待,而學校常用的處理方式未偵測到差別。以下三項建議對應《校園霸凌防制準則》的條文:</p>
+    <div class="recs">
+      <article class="rec">
+        <h3>輔導加害者時,也看他家裡怎麼管他</h3>
+        <div class="law">準則第 58 條第 2 項,建議加上</div>
+        <blockquote>輔導計畫應評估行為人之家庭管教情形,有體罰或經常批評指責者,應提供其家長家庭教育諮商或親職輔導。</blockquote>
+      </article>
+      <article class="rec">
+        <h3>讓家長「配合」有具體內容</h3>
+        <div class="law">準則第 8 條第 2 項,建議加上;可依家庭教育法第 15 條執行</div>
+        <blockquote>其子女為校園霸凌事件之行為人時,家長應參與學校提供之家庭教育諮商或親職輔導。</blockquote>
+      </article>
+      <article class="rec">
+        <h3>依風險項數,優先輔導最難停手的人</h3>
+        <div class="law">準則第 58 條輔導計畫,建議加上</div>
+        <blockquote>行為人曾受霸凌者,應一併輔導其受害經驗;並依家庭管教、受害經驗、網路使用等風險評估,決定輔導的優先順序。</blockquote>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== 研究限制 ===== -->
+  <section class="sheet" aria-labelledby="qlim">
+    <div class="eyebrow">研究限制</div>
+    <h2 id="qlim">這些結果有哪些限制</h2>
+    <ul style="margin:0;padding-left:1.3em;display:grid;gap:10px;max-width:68ch">
+      <li><b>觀察資料,只能說關聯</b>:導師處理方式未偵測到差異,也可能是較難處理的班級用得較多。「未偵測到差異」不等於沒有效果,信賴區間偏寬(告訴老師 OR 1.00,95% CI 0.81–1.23;請輔導老師協助 0.76,0.54–1.05;父母離婚 1.03,0.73–1.43)。</li>
+      <li><b>多重比較</b>:個別因素檢驗了約六項,「家裡會打」(p=0.027)經校正並不顯著,「家長常批評指責」(p=0.005)仍顯著。</li>
+      <li><b>樣本流失</b>:8,958 人中 703 人(7.8%)沒配對到第二波,他們不在脫離與停手的分析裡。未配對者受害比例較高(31% 對 26%,p=0.002),加害比例差不多(15% 對 14%,p=0.51),結果可能略為低估處境最差的孩子。</li>
+      <li><b>導師處理方式是平時作法</b>:並非針對個別事件,也無法得知事件是否進入正式調查程序。</li>
+      <li><b>累積指數</b>:部分項目參考本研究資料選定,可能高估累積效果,各項權重相同;導師親近為全班共用的分數。只有兩個時間點,未使用抽樣權數。</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div class="help">正在被霸凌,或看到有人被霸凌?可以撥打教育部反霸凌專線 <b class="num">1953</b>,或告訴你信任的大人。這份研究說的是:讓霸凌停下來是大人的責任,不是你一個人的事。</div>
+    <p><b>資料</b>:中央研究院社會學研究所「臺灣數位世代青少年成長歷程追蹤研究(TIGPS)」2023、2024 年學生、家長與導師問卷;8,958 位國一學生中 8,255 人兩年都有回答(流失 703 人,7.8%;未配對者的受害比例較高,31% 對 26%)。頁面上只有彙總數字。</p>
+    <p><b>方法</b>:脫離 / 停手為 2023 年是受害者 / 加害者、2024 年回答沒有。比較皆以邏輯斯迴歸控制性別與嚴重度等因素,標準誤依班級群聚校正。結果為關聯,不能證明因果;「未偵測到差異」也不等於沒有效果。</p>
+    <p>出自 2026「資料科學漫步」參賽作品〈別再只教受害者自保:讓國中霸凌加害者停手的是什麼〉。</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  // ---------- 資料(皆為彙總值,來自 results/report_numbers.json) ----------
+  const ROLES = [
+    { k: '無涉入', n: 21, c: 'var(--r-none)', d: '沒被欺負也沒欺負人' },
+    { k: '純受害', n: 5, c: 'var(--r-victim)', d: '被欺負' },
+    { k: '加害受害', n: 3, c: 'var(--r-both)', d: '欺負人,也被欺負' },
+    { k: '純加害', n: 1, c: 'var(--r-perp)', d: '欺負人' },
+  ];
+  const COPE = [
+    ['告訴老師', 52.8, 53.8, 0.977, 515, 1464], ['告訴家人', 52.3, 54.1, 0.733, 570, 1409],
+    ['告訴同學朋友', 50.6, 54.9, 0.506, 617, 1362], ['要求對方停止', 53.6, 53.6, 0.552, 771, 1208],
+    ['好好說明澄清', 55.5, 52.3, 0.332, 786, 1193], ['忽略', 54.2, 53.0, 0.493, 958, 1021], ['回擊對抗', 49.3, 55.4, 0.265, 592, 1387],
+  ];
+  const FLOW = {
+    '加害受害': { n: 825, c: { '無涉入': 327, '純受害': 137, '純加害': 71, '加害受害': 290 } },
+    '純加害': { n: 345, c: { '無涉入': 216, '純受害': 31, '純加害': 41, '加害受害': 57 } },
+  };
+  const OUT = [
+    { k: '無涉入', lab: '完全停手', c: 'var(--r-none)' }, { k: '純受害', lab: '停手,但被欺負', c: 'var(--r-victim)' },
+    { k: '純加害', lab: '繼續霸凌別人', c: 'var(--r-perp)' }, { k: '加害受害', lab: '繼續霸凌,也被欺負', c: 'var(--r-both)' },
+  ];
+  const RISK = [
+    { k: 'hit', lab: '家裡會打', sub: '學生或家長說,處罰時會打', y: 51.0, n: 66.1 },
+    { k: 'crit', lab: '家長常批評指責', sub: '學生說', y: 54.7, n: 69.7 },
+    { k: 'vict', lab: '自己也被欺負', sub: '加害受害者', y: 56.2, n: 71.0 },
+    { k: 'addict', lab: '網路成癮偏高', sub: '加害者中位數以上', y: 56.0, n: 66.2 },
+    { k: 'friend', lab: '好友會惹事生非', sub: '學生說', y: 58.1, n: 65.2 },
+  ];
+  const RISK_LADDER = { rate: [78.8, 80.2, 69.6, 58.4, 44.2], n: [33, 81, 148, 149, 147] };  // 0,1,2,3,4+
+  const PROT = [
+    { k: 'school', lab: '喜歡學校', sub: '學生說', y: 62.5, n: 54.8 },
+    { k: 'coh', lab: '班級凝聚力高', sub: '學生評,全體中位數以上', y: 63.7, n: 56.6 },
+    { k: 'tclose', lab: '導師覺得和學生親近', sub: '導師自評,全班共用', y: 61.9, n: 56.8 },
+  ];
+  const PROT_LADDER = { rate: [43.6, 56.1, 59.5, 66.8], n: [39, 196, 309, 268] };
+  const NOHELP = [
+    ['導師:通知父母', 60.0, 65.3, 0.276, 752, 75, 'notify'], ['導師:請輔導老師協助', 59.1, 63.4, 0.093, 570, 257, 'counsel'],
+    ['導師:處罰學生', 62.1, 59.3, 0.524, 346, 481, 'punish'], ['導師:召開學生家長會議', 62.8, 59.4, 0.636, 258, 569, 'meeting'],
+    ['導師:隔開雙方', 63.0, 59.6, 0.473, 200, 627, 'separate'],
+    ['父母離婚', 61.1, 60.6, 0.878, 175, 971, ''], ['家境不富裕', 59.0, 61.2, 0.348, 344, 836, ''],
+  ];
+  const $ = (id) => document.getElementById(id);
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (parent) parent.appendChild(e); return e; };
+
+  // ---------- 開場座位表 ----------
+  const seats = $('seats');
+  const bag = ROLES.flatMap(r => Array(r.n).fill(r.k));
+  for (let i = 0; i < 30; i++) { const s = document.createElement('div'); s.className = 'seat'; seats.appendChild(s); }
+  const legend = $('legend');
+  ROLES.forEach(r => { const s = document.createElement('span'); s.innerHTML = `<i class="sw" style="background:${r.c}"></i>${r.k} <b class="num">${r.n}</b> 人`; s.title = r.d; legend.appendChild(s); });
+  // 固定的第一張座位表(完整呈現,不需等待)
+  let order = [0,0,1,0,0,0, 0,2,0,0,1,0, 0,0,0,3,0,0, 1,0,0,0,2,0, 0,0,1,0,0,2].map(x => ROLES[x].k);
+  const paint = () => [...seats.children].forEach((s, i) => { s.dataset.r = order[i]; s.title = order[i]; });
+  paint();
+  $('shuffle').addEventListener('click', () => {
+    order = bag.slice();
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    paint();
+  });
+
+  // ---------- 點圖(有 vs 沒有) ----------
+  function dotChart(host, rows, lo, hi) {
+    const W = 640, rowH = 34, top = 26, left = 150, right = 110, H = top + rows.length * rowH + 8;
+    const x = v => left + (v - lo) / (hi - lo) * (W - left - right);
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}` });
+    for (let v = lo; v <= hi; v += 5) {
+      el('line', { x1: x(v), x2: x(v), y1: top - 6, y2: H - 6, class: 'grid' }, svg);
+      const t = el('text', { x: x(v), y: 14, 'text-anchor': 'middle' }, svg); t.textContent = v + '%';
+    }
+    rows.forEach((r, i) => {
+      const [lab, yes, no, p, ny, nn] = r, y = top + i * rowH + rowH / 2;
+      const g = el('g', { class: 'rowg' }, svg);
+      const tip = el('title', {}, g); tip.textContent = `${lab}:有 ${yes}%(n=${ny.toLocaleString()})、沒有 ${no}%(n=${nn.toLocaleString()}),p=${p}`;
+      el('rect', { x: 0, y: y - rowH / 2, width: W, height: rowH, class: 'hit' }, g);
+      const t = el('text', { x: left - 12, y: y + 4, 'text-anchor': 'end', class: 'lab' }, g); t.textContent = lab;
+      el('line', { x1: x(Math.min(yes, no)), x2: x(Math.max(yes, no)), y1: y, y2: y, class: 'link' }, g);
+      el('circle', { cx: x(no), cy: y, r: 6, class: 'dot-no' }, g);
+      el('circle', { cx: x(yes), cy: y, r: 6, class: 'dot-yes' }, g);
+      const v = el('text', { x: W - right + 14, y: y + 4, class: 'val' }, g); v.textContent = `${Math.round(yes)}% vs ${Math.round(no)}%`;
+    });
+    host.innerHTML = ''; host.appendChild(svg);
+  }
+  dotChart($('copeChart'), COPE, 40, 70);
+  dotChart($('nohelpChart'), NOHELP, 50, 75);
+
+  // ---------- 猜題 ----------
+  function quiz(optsId, ansId, skipId, showId, verdictId, judge) {
+    const opts = [...$(optsId).querySelectorAll('.opt')];
+    const reveal = (v) => {
+      opts.forEach(o => { o.disabled = true; o.setAttribute('aria-pressed', o.dataset.v === v ? 'true' : 'false'); });
+      $(verdictId).textContent = judge(v); $(ansId).hidden = false; $(skipId).hidden = true;
+    };
+    opts.forEach(o => { o.setAttribute('aria-pressed', 'false'); o.addEventListener('click', () => reveal(o.dataset.v)); });
+    $(showId).addEventListener('click', () => reveal(null));
+  }
+  quiz('q1opts', 'q1ans', 'q1skip', 'q1show', 'q1verdict', v =>
+    v === 'c' ? '猜對了:差不多,甚至還少 1 個百分點。' : v ? '其實差不多:告訴老師的反而還少 1 個百分點。' : '答案:差不多。');
+  quiz('q4opts', 'q4ans', 'q4skip', 'q4show', 'q4verdict', v => {
+    if (!v) return '答案:沒有一種偵測到差別。';
+    const r = NOHELP.find(x => x[6] === v);
+    return `你選的「${r[0].replace('導師:', '')}」:班上加害者停手 ${Math.round(r[1])}%,沒這樣做的 ${Math.round(r[2])}%(p=${r[3]}),未偵測到差別。其他四種也一樣。`;
+  });
+
+  // ---------- 一年後:100 格 ----------
+  const waffle = $('waffle');
+  for (let i = 0; i < 100; i++) { const c = document.createElement('div'); c.className = 'cell'; waffle.appendChild(c); }
+  function largestRemainder(counts, total) {
+    const raw = counts.map(c => c / total * 100), fl = raw.map(Math.floor);
+    let left = 100 - fl.reduce((a, b) => a + b, 0);
+    raw.map((r, i) => [r - fl[i], i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => fl[i]++);
+    return fl;
+  }
+  function showFate(g) {
+    const f = FLOW[g], counts = OUT.map(o => f.c[o.k]), cells = largestRemainder(counts, f.n);
+    let idx = 0;
+    OUT.forEach((o, j) => { for (let m = 0; m < cells[j]; m++) waffle.children[idx++].style.background = o.c; });
+    const list = $('fateList'); list.innerHTML = '';
+    OUT.forEach((o, j) => {
+      const pct = counts[j] / f.n * 100;
+      const d = document.createElement('div'); d.className = 'fate-item' + (o.k === '加害受害' && g === '加害受害' ? ' key' : '');
+      d.innerHTML = `<i class="sw" style="background:${o.c}"></i><span>${o.lab}<br><span class="muted">${counts[j]} 人</span></span><span class="num">${pct.toFixed(0)}%</span>`;
+      list.appendChild(d);
+    });
+    const stop = (f.c['無涉入'] + f.c['純受害']) / f.n * 100;
+    const s = document.createElement('p'); s.className = 'muted';
+    s.innerHTML = g === '加害受害'
+      ? `一年後停手 <b class="num">${stop.toFixed(0)}%</b>,完全停手只有 <b class="num">40%</b>;<span class="pen">每 3 人就有 1 人仍在霸凌、也仍被欺負。</span>`
+      : `一年後停手 <b class="num">${stop.toFixed(0)}%</b>,其中 <b class="num">63%</b> 完全停手。`;
+    list.appendChild(s);
+  }
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    showFate(b.dataset.g);
+  }));
+  showFate('加害受害');
+
+  // ---------- 開關 ----------
+  function ladderChart(host, L, labels, active) {
+    const W = 320, H = 150, l = 34, r = 14, t = 18, b = 26, lo = 30, hi = 90;
+    const x = i => l + i * (W - l - r) / (L.rate.length - 1), y = v => t + (hi - v) / (hi - lo) * (H - t - b);
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}` });
+    [40, 60, 80].forEach(v => { el('line', { x1: l, x2: W - r, y1: y(v), y2: y(v), class: 'l-grid' }, svg); const tx = el('text', { x: l - 6, y: y(v) + 4, 'text-anchor': 'end' }, svg); tx.textContent = v + '%'; });
+    el('polyline', { points: L.rate.map((v, i) => `${x(i)},${y(v)}`).join(' '), class: 'l-line' }, svg);
+    L.rate.forEach((v, i) => {
+      const c = el('circle', { cx: x(i), cy: y(v), r: i === active ? 7 : 5, class: 'l-dot' + (i === active ? ' on' : '') }, svg);
+      const tip = el('title', {}, c); tip.textContent = `${labels[i]} 項:停手 ${v}%(n=${L.n[i]})`;
+      const tx = el('text', { x: x(i), y: H - 8, 'text-anchor': 'middle' }, svg); tx.textContent = labels[i];
+      if (i === active) { const vl = el('text', { x: x(i), y: y(v) - 11, 'text-anchor': 'middle', class: 'l-val' }, svg); vl.textContent = v.toFixed(0) + '%'; }
+    });
+    host.innerHTML = ''; host.appendChild(svg);
+  }
+  function toggles(chipsId, items, L, labels, cap, ids, isProt, initial) {
+    const box = $(chipsId), on = new Set(initial);
+    items.forEach(it => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip' + (isProt ? ' prot' : ''); b.id = chipsId + '-' + it.k;
+      b.innerHTML = `<span class="box" aria-hidden="true">✓</span><span>${it.lab}<small>${it.sub}</small></span><span class="tail">單看:${Math.round(it.y)}% vs ${Math.round(it.n)}%</span>`;
+      b.addEventListener('click', () => { on.has(it.k) ? on.delete(it.k) : on.add(it.k); update(); });
+      box.appendChild(b);
+    });
+    function update() {
+      [...box.children].forEach((b, i) => b.setAttribute('aria-pressed', on.has(items[i].k) ? 'true' : 'false'));
+      const k = Math.min(on.size, cap), v = L.rate[k];
+      $(ids.cap).textContent = `${on.size} 項${isProt ? '保護因子' : '風險'}的加害者,一年後停手`;
+      const big = $(ids.big); big.textContent = v.toFixed(0) + '%';
+      big.className = 'big' + (v < 55 ? ' low' : v >= 65 ? ' high' : '');
+      $(ids.bar).style.width = v + '%';
+      $(ids.n).textContent = `同樣是 ${labels[k]} 項的有 ${L.n[k]} 人`;
+      ladderChart($(ids.lad), L, labels, k);
+    }
+    update();
+  }
+  toggles('riskChips', RISK, RISK_LADDER, ['0', '1', '2', '3', '4+'], 4, { cap: 'riskCaption', big: 'riskBig', bar: 'riskBar', n: 'riskN', lad: 'riskLadder' }, false, ['vict', 'addict']);
+  toggles('protChips', PROT, PROT_LADDER, ['0', '1', '2', '3'], 3, { cap: 'protCaption', big: 'protBig', bar: 'protBar', n: 'protN', lad: 'protLadder' }, true, ['school']);
+})();
+</script>
